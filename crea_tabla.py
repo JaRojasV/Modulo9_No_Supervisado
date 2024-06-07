@@ -4,14 +4,14 @@ import pandas as pd
 
 import os
 
-directorio_fuentes = "./Deformable-Objects-Dataset/Press"
+directorio_fuentes = "../../../Deformable-Objects-Dataset/Press"
 archivos_fuente = {
     "sponge1": "sponge_centre_100.avi"
 }
 for k, v in archivos_fuente.items():
     archivos_fuente[k] = os.path.join(directorio_fuentes, v)
 
-def extrae_np(archivo, n=-1):
+def extrae_np(archivo, n=-1, escala=None):
     """
     Dado un archivo genera un arreglo de numpy
     n es el número de cuadros a leer, si n es mayor al número de cuadros
@@ -27,6 +27,9 @@ def extrae_np(archivo, n=-1):
     if n == -1 or n > num_cuadros:
         n = num_cuadros
 
+    if escala:
+        alto = int(alto * escala)
+        ancho = int(ancho * escala)
     arreglo_datos = np.zeros((num_cuadros, alto, ancho, 6))
     i = -1
     while cap.isOpened():
@@ -37,6 +40,8 @@ def extrae_np(archivo, n=-1):
         i += 1
         if i > n:
             break
+        if escala:
+            cuadro_bgr = cv.resize(cuadro_bgr, dsize=(ancho, alto))
         cuadro_hsv = cv.cvtColor(cuadro_bgr, cv.COLOR_BGR2HSV)
         arreglo_datos[i] = np.dstack((cuadro_bgr, cuadro_hsv))
         
@@ -83,7 +88,7 @@ def crea_arreglo_datos(arreglo_datos_4D, cuadros=0):
     return arreglo_datos
 
 escenarios = archivos_fuente.keys()
-def obtén_tabla_datos(nombre="sponge1", conjuntos=[0, 30, 75]):
+def obtén_tabla_datos(nombre="sponge1", conjuntos=[0, 30, 75], escala=None):
     """
     Llama a las funciones que:
     1. Lee el video y guarda las imágenes en un arreglo 4D
@@ -92,7 +97,7 @@ def obtén_tabla_datos(nombre="sponge1", conjuntos=[0, 30, 75]):
     Regresa la tabla de pandas y el arreglo 4D original.
     """
     print("Leyendo numpy...")
-    arreglo_datos_4D = extrae_np(archivos_fuente["sponge1"], -1)
+    arreglo_datos_4D = extrae_np(archivos_fuente["sponge1"], -1, escala=escala)
     if arreglo_datos_4D is None:
         print("Error al leer los datos de ", nombre)
         return
