@@ -6,7 +6,10 @@ import os
 
 directorio_fuentes = "../../../Deformable-Objects-Dataset/Press"
 archivos_fuente = {
-    "sponge1": "sponge_centre_100.avi"
+    "sponge1" : "sponge_centre_100.avi",
+    "plastiline" : "plasticine_longside_100_below.avi",
+    "plasticide" : "plasticine_cilinder_100.avi",
+    "bread" : "bread1_115_fc.avi"
 }
 for k, v in archivos_fuente.items():
     archivos_fuente[k] = os.path.join(directorio_fuentes, v)
@@ -20,7 +23,7 @@ def extrae_np(archivo, n=-1, escala=None):
     cap = cv.VideoCapture(archivo)
     if not cap.isOpened():
         print("No se pudo abrir", archivo)
-        return
+        return None  # Asegúrate de retornar None en caso de error
     ancho = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
     alto = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
     num_cuadros = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
@@ -55,6 +58,10 @@ def crea_arreglo_datos(arreglo_datos_4D, cuadros=0):
     """
     if type(cuadros) == int:
         cuadros = [cuadros]
+
+    if arreglo_datos_4D.size == 0:
+        print("El arreglo de datos está vacío.")
+        return None
     
     dims = arreglo_datos_4D.shape
     num_cuadros = dims[0]
@@ -97,12 +104,15 @@ def obtén_tabla_datos(nombre="sponge1", conjuntos=[0, 30, 75], escala=None):
     Regresa la tabla de pandas y el arreglo 4D original.
     """
     print("Leyendo numpy...")
-    arreglo_datos_4D = extrae_np(archivos_fuente["sponge1"], -1, escala=escala)
+    arreglo_datos_4D = extrae_np(archivos_fuente[nombre], -1, escala=escala)
     if arreglo_datos_4D is None:
-        print("Error al leer los datos de ", nombre)
-        return
+        print("Error al leer los datos de", nombre)
+        return None, None
     print("Organizando renglones...")
     arreglo_datos = crea_arreglo_datos(arreglo_datos_4D, conjuntos)
+    if arreglo_datos is None:
+        print("Error al crear el arreglo de datos")
+        return None, None
     print("Creando tabla de datos...")
     tabla_datos = pd.DataFrame(data=arreglo_datos,
                           columns=('f','i','j','B','G','R','H','S','V'))
